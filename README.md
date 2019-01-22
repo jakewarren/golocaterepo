@@ -4,7 +4,7 @@ Have you ever run across a Go binary and you want to look at the source code but
 
 ## Usage
 
-	golocaterepo <go binary file>
+	golocaterepo <go binary file in your $PATH>
 
 ### Example
 
