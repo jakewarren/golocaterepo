@@ -4,7 +4,15 @@ Have you ever run across a Go binary and you want to look at the source code but
 
 ## Usage
 
-	golocaterepo <go binary file in your $PATH>
+```
+❯ golocaterepo -h
+Description: prints the source repository found in the strings of a Go binary.
+
+Usage: golocaterepo [binary in your PATH]
+
+Options:
+  -v, --verbose   Verbose error output
+```
 
 ### Example
 
