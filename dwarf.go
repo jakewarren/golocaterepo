@@ -68,13 +68,11 @@ func getTableMachO(f *os.File) (textStart uint64, symtab, pclntab []byte, err er
 		return 0, nil, nil, errors.New("empty __gopclntab")
 	}
 	return textStart, symtab, pclntab, nil
-
 }
 
 // Borrowed from https://golang.org/src/cmd/internal/objfile/pe.go
 // With hat tip to the Delve authors https://github.com/derekparker/delve/blob/master/pkg/proc/bininfo.go#L427
 func getTablePe(f *os.File) (textStart uint64, symtab, pclntab []byte, err error) {
-
 	obj, err := pe.NewFile(f)
 	if err != nil {
 		return 0, nil, nil, errors.Wrap(err, "file is not a PE binary")
@@ -172,23 +170,31 @@ func getMainPath(file string) (string, error) {
 		return "", errors.Wrap(err, "main path not found")
 	}
 	path, _, _ := table.PCToLine(table.LookupFunc("main.main").Entry)
-	return stripPath(filepath.Dir(path))
+	return stripPath(filepath.Dir(path)), nil
 }
 
 // strip path strips the GOPATH prefix from the raw source code path
 // as returned by getMainPath.
-// If the path is absolute, stripPath assumes a GOPATH prefix and
+// If the path is absolute, stripPath first assumes a GOPATH prefix and
 // searches for the first occurrence of "/src/". It returns the part
 // after "/src/".
+// If the absolute path contains no "/src/", stripPath searches for "/pkg/mod/",
+// which is where Go modules are stored.
+// If the absolute path contains neither "/src/" nor "/pkg/mod/",
+// stripPath returns the full path.
 // If the path is relative, stripPath does not touch the path at all.
-func stripPath(path string) (string, error) {
+func stripPath(path string) string {
 	path = filepath.ToSlash(path)
 	if !filepath.IsAbs(path) {
-		return path, nil
+		return path
 	}
 	n := strings.Index(path, "/src/")
-	if n == -1 {
-		return "", errors.New("path is absolute but contains no '/src/' dir: " + path)
+	if n != -1 {
+		return path[n+5:]
 	}
-	return path[n+5:], nil
+	n = strings.Index(path, "/pkg/mod/")
+	if n != -1 {
+		return path[n+9:]
+	}
+	return path
 }
